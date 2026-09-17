@@ -1,5 +1,7 @@
 KEYS.json*
 
-Test/*
+__pycache__/
 
-__pycache__/*
+credentials.json*
+
+token.json*

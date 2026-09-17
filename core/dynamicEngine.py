@@ -14,16 +14,26 @@ class DynamicEngine:
         
         full_instruction = f"{base_instruction}\n\nSpecialization:\n{agent_purpose}"
         
-        config = genai_types.GenerateContentConfig(
+        self.config = genai_types.GenerateContentConfig(
             system_instruction=full_instruction,
             temperature=0.0,
             tools=tools,
         )
+
+        self.reset_session()
+
+    def reset_session(self):
         self.chat_session = self.client.chats.create(
             model='gemini-3.6-flash', 
-            config=config
+            config=self.config
         )
 
     def process_request(self, goal_instruction: str) -> str:
         response = self.chat_session.send_message(goal_instruction)
-        return response.text
+    
+        if response.candidates and response.candidates[0].content.parts:
+            text_parts = [part.text for part in response.candidates[0].content.parts if part.text]
+            if text_parts:
+                return "\n".join(text_parts).strip()
+            
+        return "Task completed successfully (no text report provided)."

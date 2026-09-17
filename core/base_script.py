@@ -2,6 +2,7 @@ import asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.types import Message
 from core.dynamicEngine import DynamicEngine
+from core.staticEngine import StaticEngine
 
 class BaryCoreBase:
     def __init__(self, telegram_token: str, gemini_api_key: str):
@@ -22,6 +23,9 @@ class BaryCoreBase:
             tools=tools
         )
 
+    def register_static_agent(self, agent_id: str, commands_map: dict):
+        self.static_agents[agent_id] = StaticEngine(commands_map=commands_map)
+
     async def handle_message(self, message: Message):
         print(f"Telegram forwarded the text: {message.text}")
         text = message.text
@@ -29,7 +33,7 @@ class BaryCoreBase:
             return
             
         parts = text.split(maxsplit=1)
-        agent_id = parts[0]
+        agent_id = parts[0].strip(" ,.!?:;\n")
         user_prompt = parts[1] if len(parts) > 1 else ""
 
         if agent_id.startswith("@D"):
@@ -37,8 +41,10 @@ class BaryCoreBase:
                 return
             await self._run_dynamic(agent_id, user_prompt, message)
             
-        elif agent_id.startswith("@C"):
-            await message.reply("⏳ StaticEngine ще не підключено.")
+        elif agent_id.startswith("@S"):
+            if agent_id not in self.static_agents:
+                return
+            await self._run_static(agent_id, user_prompt, message)
 
     async def _run_dynamic(self, agent_id: str, prompt: str, message: Message):
         await message.reply("🎯 In progress")
@@ -47,7 +53,7 @@ class BaryCoreBase:
             engine = self.dynamic_agents[agent_id]
             result = await asyncio.to_thread(engine.process_request, prompt)
             
-            await message.reply(f"**{agent_id}:**\n\n{result}", parse_mode="Markdown")
+            await message.reply(f"<b>{agent_id}:</b>\n\n{result}", parse_mode="HTML")
             
             clean_result = result.strip()
             if clean_result.startswith("@D"):
@@ -60,6 +66,22 @@ class BaryCoreBase:
          
                     await self._run_dynamic(next_agent_id, next_prompt, message)
                     
+        except Exception as e:
+            await message.reply(f"🔧 <b>An error:</b>\n<pre>{str(e)}</pre>", parse_mode="HTML")
+
+        finally:
+            if agent_id in self.dynamic_agents:
+                self.dynamic_agents[agent_id].reset_session()
+                print(f"Session for {agent_id} successfully cleared.")
+
+    async def _run_static(self, agent_id: str, prompt: str, message: Message):
+        await message.reply("🎯 In progress")
+        
+        try:
+            engine = self.static_agents[agent_id]
+            result = await asyncio.to_thread(engine.process_request, prompt)
+            await message.reply(f"<b>{agent_id}:</b>\n\n{result}", parse_mode="HTML")
+
         except Exception as e:
             await message.reply(f"🔧 <b>An error:</b>\n<pre>{str(e)}</pre>", parse_mode="HTML")
 
