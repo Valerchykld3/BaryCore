@@ -1,4 +1,5 @@
 import asyncio
+import html
 from aiogram import Bot, Dispatcher
 from aiogram.types import Message
 from core.dynamicEngine import DynamicEngine
@@ -80,10 +81,12 @@ class BaryCoreBase:
         try:
             engine = self.static_agents[agent_id]
             result = await asyncio.to_thread(engine.process_request, prompt)
-            await message.reply(f"<b>{agent_id}:</b>\n\n{result}", parse_mode="HTML")
 
+            safe_result = html.escape(result)
+            await message.reply(f"<b>{agent_id}:</b>\n\n{safe_result}", parse_mode="HTML")
         except Exception as e:
-            await message.reply(f"🔧 <b>An error:</b>\n<pre>{str(e)}</pre>", parse_mode="HTML")
+            safe_error = html.escape(str(e))
+            await message.reply(f"🛠 <b>An error:</b>\n<pre>{safe_error}</pre>", parse_mode="HTML")
 
     async def start(self):
         print("BaryCore Base starts...")

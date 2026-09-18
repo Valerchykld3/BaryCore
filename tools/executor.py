@@ -57,6 +57,41 @@ def create_file(path: str, content: str = "") -> str:
     except Exception as e:
         return f"Error creating file: {str(e)}"
 
+def edit_file(filepath: str, mode: str, new_content: str, old_content: str = "") -> str:
+    print(f"Editing file '{filepath}' in mode '{mode}'...")
+    try:
+        if not os.path.exists(filepath):
+            return f"Error: File '{filepath}' does not exist."
+        
+        if mode == 'append':
+            with open(filepath, 'a', encoding='utf-8') as f:
+                # Додаємо новий рядок, щоб текст не злипався з попереднім
+                f.write("\n" + new_content)
+            return f"Success: Appended new content to '{filepath}'."
+            
+        elif mode == 'overwrite':
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(new_content)
+            return f"Success: Completely overwrote the content of '{filepath}'."
+            
+        elif mode == 'replace':
+            with open(filepath, 'r', encoding='utf-8') as f:
+                file_data = f.read()
+                
+            if old_content not in file_data:
+                return "Error: The exact 'old_content' was not found in the file. No changes made."
+                
+            file_data = file_data.replace(old_content, new_content)
+            
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(file_data)
+            return f"Success: Replaced specific content in '{filepath}'."
+            
+        else:
+            return "Error: Invalid mode. Use 'append', 'overwrite', or 'replace'."
+    except Exception as e:
+        return f"Edit error: {str(e)}"
+
 def copy_item(src: str, dst: str) -> str:
     try:
         if os.path.isdir(src):

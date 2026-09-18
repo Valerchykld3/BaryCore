@@ -4,10 +4,13 @@ Software Direcyories
 Directories:
 core/ — the folder containing the system's base core and engine classes (routing and API communication).
     	> The register_dynamic_agent method creates a new instance of a dynamic agent (type DynamicEngine). It takes the system prompt and tools, and then stores the ready agent in the internal dynamic_agents dictionary under the unique agent_id key.
-	> The handle_message method is the main hub for processing incoming messages. Upon receiving text from the Telegram API, it splits it into two components: the first word is the agent_id (addressing the bot), and the rest of the text is the user_prompt (the actual task). If the identifier starts with @D, the method checks for the presence of such an agent in the dictionary and passes the task for execution.
-	> The _run_dynamic method manages the request's lifecycle and handles asynchrony. First, it sends the user an instant feedback message: "Accepted for work". Since the request to the Google API is synchronous, it is crucial that the Telegram bot does not hang and can accept parallel commands. Therefore, the agent's engine is launched in an isolated thread. Upon receiving the final result from the model, the method formats it and sends it to the user.
-	> Upon initialization, the JSON file of the corresponding archetype is loaded, the System Instruction is extracted from it, AI configurations are applied, the array of allowed tools (Tools) is connected, and an active chat session is created to preserve the context.
-    	> The process_request method receives the user's task (Goal Instruction) from the core and sends it to the AI session. All the logic of autonomous tool calling happens under the hood of the SDK, and the method returns only the ready text response to be forwarded to Telegram.
+		> The register_static_agent
+		> The handle_message method is the main hub for processing incoming messages. Upon receiving text from the Telegram API, it splits it into two components: the first word is the agent_id (addressing the bot), and the rest of the text is the user_prompt (the actual task). If the identifier starts with @D, the method checks for the presence of such an agent in the dictionary and passes the task for execution.
+		> The _run_dynamic method manages the request's lifecycle and handles asynchrony. First, it sends the user an instant feedback message: "Accepted for work". Since the request to the Google API is synchronous, it is crucial that the Telegram bot does not hang and can accept parallel commands. Therefore, the agent's engine is launched in an isolated thread. Upon receiving the final result from the model, the method formats it and sends it to the user.
+		> The _run_static
+		> Upon initialization, the JSON file of the corresponding archetype is loaded, the System Instruction is extracted from it, AI configurations are applied, the array of allowed tools (Tools) is connected, and an active chat session is created to preserve the context.
+    	> reset_session
+		> The process_request method receives the user's task (Goal Instruction) from the core and sends it to the AI session. All the logic of autonomous tool calling happens under the hood of the SDK, and the method returns only the ready text response to be forwarded to Telegram.
 
 tools/ — the folder containing tool modules (Python functions).
 

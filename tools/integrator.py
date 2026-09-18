@@ -1,5 +1,7 @@
 import os
 import io
+import base64
+from email.message import EmailMessage
 from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -7,15 +9,12 @@ from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
-SCOPES = ['https://www.googleapis.com/auth/drive']
+SCOPES = ['https://www.googleapis.com/auth/drive', 'https://mail.google.com/']
 
-# Tools for DGDB
-
-def _get_drive_service():
+def _get_google_credentials():
     creds = None
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-    
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
@@ -24,8 +23,15 @@ def _get_drive_service():
             creds = flow.run_local_server(port=0)
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
-            
-    return build('drive', 'v3', credentials=creds)
+    return creds
+
+def _get_drive_service():
+    return build('drive', 'v3', credentials=_get_google_credentials())
+
+def _get_gmail_service():
+    return build('gmail', 'v1', credentials=_get_google_credentials())
+
+# Tools for DGDB
 
 def search_drive(query: str, limit: int = 10) -> str:
     safe_limit = min(limit, 50) 
@@ -319,3 +325,81 @@ def share_drive_file(file_id: str) -> str:
         return f"Success: File shared. Public link:\n{link}"
     except Exception as e:
         return f"Share error: {str(e)}"
+
+# Tools for SGRB
+
+def read_unread_emails(prompt: str = "") -> str:
+    print("Reading unread emails from Gmail...")
+    try:
+        service = _get_gmail_service()
+        results = service.users().messages().list(userId='me', labelIds=['UNREAD'], maxResults=5).execute()
+        messages = results.get('messages', [])
+        
+        if not messages:
+            return "You have no new unread emails."
+            
+        report = f"{len(messages)} unread emails found:\n"
+        for msg in messages:
+            msg_data = service.users().messages().get(userId='me', id=msg['id'], format='metadata', metadataHeaders=['From', 'Subject']).execute()
+            headers = msg_data.get('payload', {}).get('headers', [])
+            
+            sender = next((h['value'] for h in headers if h['name'] == 'From'), "Unknown")
+            subject = next((h['value'] for h in headers if h['name'] == 'Subject'), "Without theme")
+            report += f"From: {sender}\nTheme: {subject}\n\n"
+            
+        return report.strip()
+    except Exception as e:
+        return f"A Gmail error: {str(e)}"
+
+def get_mailbox_status(prompt: str = "") -> str:
+    print("Fetching mailbox status...")
+    try:
+        service = _get_gmail_service()
+        profile = service.users().getProfile(userId='me').execute()
+        
+        inbox_results = service.users().labels().get(userId='me', id='INBOX').execute()
+        unread_count = inbox_results.get('messagesUnread', 0)
+        
+        spam_results = service.users().labels().get(userId='me', id='SPAM').execute()
+        spam_unread = spam_results.get('messagesUnread', 0)
+
+        return (f"Box: {profile.get('emailAddress')}\n"
+                f"Unread messages in the inbox: {unread_count}\n"
+                f"Unread messages in spam: {spam_unread}")
+    except Exception as e:
+        return f"Error retrieving status: {str(e)}"
+
+def create_quick_draft(prompt: str) -> str:
+    print("Creating Gmail draft...")
+    try:
+        if ":" not in prompt or "|" not in prompt:
+            return ("Invalid format. Use:\n"
+                    "draft: email@gmail.com | Theme | Text")
+        
+        data_str = prompt.split(':', 1)[1]
+        parts = data_str.split('|')
+        
+        if len(parts) < 3:
+            return "Insufficient data. Format: draft: email | theme | text"
+            
+        to_email = parts[0].strip()
+        subject = parts[1].strip()
+        body_text = parts[2].strip()
+
+        message = EmailMessage()
+        message.set_content(body_text)
+        message['To'] = to_email
+        message['Subject'] = subject
+
+        encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+        create_message = {'message': {'raw': encoded_message}}
+
+        service = _get_gmail_service()
+        draft = service.users().drafts().create(userId='me', body=create_message).execute()
+        
+        draft_id = draft['message']['id']
+        link = f"https://mail.google.com/mail/u/0/#drafts?compose={draft_id}"
+        
+        return f"Created!\nTo: {to_email}\nTheme: {subject}\nLink: {link}"
+    except Exception as e:
+        return f"Error creating draft: {str(e)}"
