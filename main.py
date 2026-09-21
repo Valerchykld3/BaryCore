@@ -12,26 +12,33 @@ async def main():
         telegram_token=keys["telegram_token"], 
         gemini_api_key=keys["gemini_api_key"]
     )
-    
+
+    # Executors
+
     bary_core.register_dynamic_agent(
         agent_id="@DFMB",
         archetype_path="archetypes/executor.json",
         agent_purpose="You are the File Manager Bot (DFMB). Your task is to navigate the file system and read the contents of files.",
-        tools=[list_directory, find_file, read_file_content, create_directory, create_file, edit_file, copy_item, move_item, delete_item, get_file_info]
+        tools=[list_directory, find_file, read_file_content, create_directory, create_file, edit_file, copy_item, move_item, delete_item, get_file_info],
+        model_name="gemini-3.8-flash"
     )
 
     bary_core.register_dynamic_agent(
         agent_id="@DTRB",
         archetype_path="archetypes/executor.json",
         agent_purpose="You are Task Runner Bot (DTRB). Your task is to execute commands in the PowerShell/CMD system console.",
-        tools=[execute_shell_command, check_process_status, kill_process, get_system_resources]
+        tools=[execute_shell_command, check_process_status, kill_process, get_system_resources],
+        model_name="gemini-3.8-flash"
     )
+
+    # Integrators
 
     bary_core.register_dynamic_agent(
         agent_id="@DGDB",
         archetype_path="archetypes/integrator.json",
         agent_purpose="You are Google Cloud Bot (DGDB). Your task is to interact with Google Drive API to search, read, and manipulate cloud files.",
-        tools=[search_drive, list_drive_directory, read_drive_file, create_drive_folder, create_drive_file, copy_drive_item, move_drive_item, delete_drive_item, get_drive_item_info, upload_to_drive, upload_folder_to_drive, download_from_drive, share_drive_file]
+        tools=[search_drive, list_drive_directory, read_drive_file, create_drive_folder, create_drive_file, copy_drive_item, move_drive_item, delete_drive_item, get_drive_item_info, upload_to_drive, upload_folder_to_drive, download_from_drive, share_drive_file],
+        model_name="gemini-3.8-flash"
     )
 
     bary_core.register_static_agent(
@@ -41,6 +48,21 @@ async def main():
             "статус": get_mailbox_status,
             "чернетка": create_quick_draft,
         }
+    )
+
+    # Analysts
+
+    bary_core.register_dynamic_agent(
+        agent_id="@DMSB",
+        archetype_path="archetypes/analyst.json",
+        agent_purpose="You are Math Solver Bot (DMSB), a Dynamic Analyst agent. "
+            "Your task is to solve problems in higher mathematics and theoretical physics step-by-step. "
+            "Provide detailed analytical derivations with full intermediate steps. "
+            "Represent formulas and derivations using rich Unicode symbols "
+            "and wrap multi-line mathematical derivations inside code blocks using ``` ... ``` for proper alignment. "
+            "Provide explanations in clear natural text. Never change local or external states.",
+        tools=[],
+        model_name="gemini-3.1-pro-preview"
     )
     
     await bary_core.start()

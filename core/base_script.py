@@ -1,5 +1,6 @@
 import asyncio
 import html
+import re
 from aiogram import Bot, Dispatcher
 from aiogram.types import Message
 from core.dynamicEngine import DynamicEngine
@@ -16,12 +17,13 @@ class BaryCoreBase:
         self.dynamic_agents = {}
         self.static_agents = {}
 
-    def register_dynamic_agent(self, agent_id: str, archetype_path: str, agent_purpose: str, tools: list):
+    def register_dynamic_agent(self, agent_id: str, archetype_path: str, agent_purpose: str, tools: list, model_name: str):
         self.dynamic_agents[agent_id] = DynamicEngine(
             api_key=self.gemini_key, 
             archetype_json_path=archetype_path, 
             agent_purpose=agent_purpose,
-            tools=tools
+            tools=tools,
+            model_name=model_name
         )
 
     def register_static_agent(self, agent_id: str, commands_map: dict):
@@ -54,7 +56,20 @@ class BaryCoreBase:
             engine = self.dynamic_agents[agent_id]
             result = await asyncio.to_thread(engine.process_request, prompt)
             
-            await message.reply(f"<b>{agent_id}:</b>\n\n{result}", parse_mode="HTML")
+            def format_for_tg_html(raw_text: str) -> str:
+                parts = re.split(r'(```[\s\S]*?```)', raw_text)
+                formatted = []
+                for p in parts:
+                    if p.startswith('```') and p.endswith('```'):
+                        lines = p.split('\n')
+                        body = '\n'.join(lines[1:-1]) if len(lines) > 2 else p.strip('`')
+                        formatted.append(f"<pre>{html.escape(body)}</pre>")
+                    else:
+                        formatted.append(html.escape(p))
+                return "".join(formatted)
+
+            safe_output = format_for_tg_html(result)
+            await message.reply(f"<b>{agent_id}:</b>\n\n{safe_output}", parse_mode="HTML")
             
             clean_result = result.strip()
             if clean_result.startswith("@D"):
@@ -62,14 +77,12 @@ class BaryCoreBase:
                 
                 if next_agent_id in self.dynamic_agents and next_agent_id != agent_id:
                     print(f"{agent_id} is handing over the task {next_agent_id}...")
-                    
                     next_prompt = clean_result.replace(next_agent_id, "", 1).strip()
-         
                     await self._run_dynamic(next_agent_id, next_prompt, message)
                     
         except Exception as e:
-            await message.reply(f"🔧 <b>An error:</b>\n<pre>{str(e)}</pre>", parse_mode="HTML")
-
+            safe_err = html.escape(str(e))
+            await message.reply(f"🔧 <b>An error:</b>\n<pre>{safe_err}</pre>", parse_mode="HTML")
         finally:
             if agent_id in self.dynamic_agents:
                 self.dynamic_agents[agent_id].reset_session()
