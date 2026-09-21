@@ -72,13 +72,18 @@ class BaryCoreBase:
             await message.reply(f"<b>{agent_id}:</b>\n\n{safe_output}", parse_mode="HTML")
             
             clean_result = result.strip()
-            if clean_result.startswith("@D"):
-                next_agent_id = clean_result.split(maxsplit=1)[0]
+            if clean_result.startswith("@"):
+                parts = clean_result.split(maxsplit=1)
+                next_agent_id = parts[0]
+                next_prompt = parts[1] if len(parts) > 1 else ""
                 
-                if next_agent_id in self.dynamic_agents and next_agent_id != agent_id:
-                    print(f"{agent_id} is handing over the task {next_agent_id}...")
-                    next_prompt = clean_result.replace(next_agent_id, "", 1).strip()
-                    await self._run_dynamic(next_agent_id, next_prompt, message)
+                if next_agent_id != agent_id:
+                    if next_agent_id in self.dynamic_agents:
+                        print(f"{agent_id} is handing over the task to {next_agent_id}...")
+                        await self._run_dynamic(next_agent_id, next_prompt, message)
+                    elif next_agent_id in self.static_agents:
+                        print(f"{agent_id} is handing over the task to {next_agent_id}...")
+                        await self._run_static(next_agent_id, next_prompt, message)
                     
         except Exception as e:
             safe_err = html.escape(str(e))

@@ -369,7 +369,7 @@ def get_mailbox_status(prompt: str = "") -> str:
     except Exception as e:
         return f"Error retrieving status: {str(e)}"
 
-def create_quick_draft(prompt: str) -> str:
+def create_draft(prompt: str) -> str:
     print("Creating Gmail draft...")
     try:
         if ":" not in prompt or "|" not in prompt:

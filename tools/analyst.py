@@ -1,13 +1,16 @@
 import json
 import os
 import re
+import threading
 from telethon.sync import TelegramClient
 
 # Tools for DNIB
 
 CACHE_FILE = "channels_cache.json"
+telethon_lock = threading.Lock()
 
-def _get_entity_from_cache(client: TelegramClient, channel_name: str):
+
+def get_entity_from_cache(client: TelegramClient, channel_name: str):
     def normalize(text: str) -> str:
         return re.sub(r'[\s\W_]+', '', text.lower())
 
@@ -53,13 +56,14 @@ def get_channel_history(channel_name: str, limit: int = 20) -> str:
         return f"Error reading KEYS.json: {str(e)}"
 
     try:
-        with TelegramClient('user_session', api_id, api_hash) as client:
-            target_entity = None
+        with telethon_lock:
+            with TelegramClient('user_session', api_id, api_hash) as client:
+                target_entity = None
             
             if channel_name.startswith('@') or 't.me/' in channel_name:
                 target_entity = channel_name
             else:
-                target_entity = _get_entity_from_cache(client, channel_name)
+                target_entity = get_entity_from_cache(client, channel_name)
             
             if not target_entity:
                 return f"Error: Channel '{channel_name}' not found among subscriptions. Ask the user to provide the exact @username."
