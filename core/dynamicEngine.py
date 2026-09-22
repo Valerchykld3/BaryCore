@@ -13,7 +13,7 @@ class DynamicEngine:
         base_instruction = config_data.get("system_instruction", "")
         self.archetype_name = config_data.get("archetype", "Unknown")
         
-        full_instruction = f"{base_instruction}\n\nSpecialization:\n{agent_purpose}\n\nStrict formatting rule: Format your output strictly using HTML tags. Never use Markdown formatting."
+        full_instruction = f"{base_instruction}\n\nSpecialization:\n{agent_purpose}"
         
         self.config = genai_types.GenerateContentConfig(
             system_instruction=full_instruction,
