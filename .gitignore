@@ -6,8 +6,6 @@ credentials.json*
 
 token.json*
 
-auth_telethon.py*
-
 user_session.session*
 
 channels_cache.json*

@@ -1,0 +1,59 @@
+Libraries required for installation (terminal commands):
+pip install aiogram
+pip install google-genai
+pip install psutil
+pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib 
+pip install telethon
+pip install send2trash
+
+
+Connecting a Telegram bot and Google Gemini API:
+1. Create a new file KEYS.json containing:
+{
+	"telegram_token": "",
+	"gemini_api_key": ""
+}
+2. Open BotFather in Telegram, and then create a new bot with tap button "Create a New Bot".
+3. There you can see your bot's API key. Copy it to KEYS.json in line "telegram_token". This bot you will use for assigning tasks.
+4. Open Google AI Studio in your browser. 
+5. Click "Dashboard" -> "Projects" -> "Create a new project".
+6. When the project is created, click "API keys" -> "Create API key". Name it and choose the need project.
+7. Copy your API key to KEYS.json in line "gemini_api_key". 
+Moreover, on this platform you can monitor token expenditure. Tokens are not a free resource; Google charges for them. 
+If your balance is zero, you can only use free AI models, and are limited to no more than 5 requests per minute.
+
+
+Connecting cloud services:
+1. Open Google Cloud Console in your browser. 
+To work with Google cloud services, you need to activate them.
+2. Click "APIs & Services" -> "Library".
+3. Enter in the search bar "Google Drive". Click "Google Drive API" -> "Enable". 
+4. Perform the same actions with "Gmail API".
+Now it's need to create keys.
+5. Click "APIs & Services" -> "Create credentials" -> "OAuth client ID". 
+6. Choose application type: "Desktop app", give a name, and create.
+7. A window with your new client will appear. Click "Download JSON" to save your credentials file.
+8. Rename this downloaded file to exactly "credentials.json" and place it in the root directory of your project.
+9. In the Google Cloud Console left menu, navigate to "OAuth consent screen" -> "Audience".
+10. Ensure the "Publishing status" is set to "Testing".
+11. Scroll down to the "Test users" section, click "Add Users", and type your own Google account email address. This step is critical; otherwise, Google will block the authorization attempt.
+!The first time a cloud agent (like @DGDB or @SGRB) executes a tool, a browser window will open automatically asking for authorization.
+!Log in with the Google account you added as a test user. You may see a warning stating "Google hasn't verified this app." Click "Advanced" -> "Go to [Your App Name]".
+!Grant the requested permissions for Drive and Gmail. Once authorized, a "token.json" file will be automatically created in the root folder, and the script will work autonomously without browser pop-ups in the future.
+
+
+
+Authorizing the bot for a Telegram account:
+1. Add new lines in your KEYS.json:
+{
+	"telegram_token": "",
+	"gemini_api_key": "",
+	
+	"api_id": "",
+	"api_hash": ""
+}
+
+2. Open "my.telegram.org" in your browser, and create a new app.
+3. You can see your app configuration. Copy app api_id in your line "api_id". Copy app api_hash in your line "api_hash"
+4. Now locate the "auth_telethon.py" file in the project root and run it via the terminal (py auth_telethon.py).
+5. Log in. An active Telegram session will appear in the root of your project.
