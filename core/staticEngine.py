@@ -1,8 +1,9 @@
 import html
 
 class StaticEngine:
-    def __init__(self, commands_map: dict):
+    def __init__(self, commands_map: dict, full_name: str):
         self.commands_map = commands_map
+        self.full_name = full_name
 
     def process_request(self, prompt: str) -> str:
         prompt_lower = prompt.lower()

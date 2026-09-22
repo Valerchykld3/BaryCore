@@ -17,17 +17,21 @@ class BaryCoreBase:
         self.dynamic_agents = {}
         self.static_agents = {}
 
-    def register_dynamic_agent(self, agent_id: str, archetype_path: str, agent_purpose: str, tools: list, model_name: str):
+    def register_dynamic_agent(self, agent_id: str, full_name: str, archetype_path: str, agent_purpose: str, tools: list, model_name: str):
         self.dynamic_agents[agent_id] = DynamicEngine(
             api_key=self.gemini_key, 
             archetype_json_path=archetype_path, 
             agent_purpose=agent_purpose,
             tools=tools,
-            model_name=model_name
+            model_name=model_name,
+            full_name=full_name
         )
 
-    def register_static_agent(self, agent_id: str, commands_map: dict):
-        self.static_agents[agent_id] = StaticEngine(commands_map=commands_map)
+    def register_static_agent(self, agent_id: str, full_name: str, commands_map: dict):
+        self.static_agents[agent_id] = StaticEngine(
+            commands_map=commands_map,
+            full_name=full_name
+            )
 
     async def handle_message(self, message: Message):
         print(f"Telegram forwarded the text: {message.text}")
@@ -38,6 +42,27 @@ class BaryCoreBase:
         parts = text.split(maxsplit=1)
         agent_id = parts[0].strip(" ,.!?:;\n")
         user_prompt = parts[1] if len(parts) > 1 else ""
+
+        if agent_id == "/agents":
+            if not self.dynamic_agents and not self.static_agents:
+                await message.reply("There are currently no active agents in orbit.")
+                return
+                
+            response = "Active agents in orbit:\n\n"
+            
+            if self.dynamic_agents:
+                response += "Dynamic:\n"
+                for a_id, engine in self.dynamic_agents.items():
+                    response += f"• {a_id} — {engine.full_name}\n"
+                response += "\n"
+                
+            if self.static_agents:
+                response += "Static:\n"
+                for a_id, engine in self.static_agents.items():
+                    response += f"• {a_id} — {engine.full_name}\n"
+                
+            await message.reply(response.strip())
+            return
 
         if agent_id.startswith("@D"):
             if agent_id not in self.dynamic_agents:

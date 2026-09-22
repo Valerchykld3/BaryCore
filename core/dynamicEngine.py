@@ -3,8 +3,9 @@ from google import genai
 from google.genai import types as genai_types
 
 class DynamicEngine:
-    def __init__(self, api_key: str, archetype_json_path: str, agent_purpose: str, tools: list, model_name: str):
+    def __init__(self, api_key: str, archetype_json_path: str, agent_purpose: str, tools: list, model_name: str, full_name: str):
         self.model_name = model_name
+        self.full_name = full_name
         self.client = genai.Client(api_key=api_key)
         
         with open(archetype_json_path, 'r', encoding='utf-8') as f:
