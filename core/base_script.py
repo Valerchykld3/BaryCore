@@ -85,20 +85,46 @@ class BaryCoreBase:
             engine = self.dynamic_agents[agent_id]
             result = await asyncio.to_thread(engine.process_request, prompt)
             
-            def format_for_tg_html(raw_text: str) -> str:
+            def format_and_chunk(raw_text: str, limit: int = 3900) -> list:
                 parts = re.split(r'(```[\s\S]*?```)', raw_text)
-                formatted = []
+                chunks = []
+                current_chunk = ""
+
                 for p in parts:
                     if p.startswith('```') and p.endswith('```'):
                         lines = p.split('\n')
                         body = '\n'.join(lines[1:-1]) if len(lines) > 2 else p.strip('`')
-                        formatted.append(f"<pre>{html.escape(body)}</pre>")
+                        safe_body = html.escape(body)
+                        
+                        if len(safe_body) > limit:
+                            if current_chunk:
+                                chunks.append(current_chunk)
+                                current_chunk = ""
+                            for i in range(0, len(safe_body), limit):
+                                chunks.append(f"<pre>{safe_body[i:i+limit]}</pre>")
+                            continue
+                        else:
+                            formatted_part = f"<pre>{safe_body}</pre>"
                     else:
-                        formatted.append(html.escape(p))
-                return "".join(formatted)
+                        formatted_part = html.escape(p)
 
-            safe_output = format_for_tg_html(result)
-            await message.reply(f"<b>{agent_id}:</b>\n\n{safe_output}", parse_mode="HTML")
+                    if len(current_chunk) + len(formatted_part) > limit:
+                        chunks.append(current_chunk)
+                        current_chunk = formatted_part
+                    else:
+                        current_chunk += formatted_part
+                
+                if current_chunk:
+                    chunks.append(current_chunk)
+                return chunks
+
+            chunks = format_and_chunk(result)
+            
+            await message.reply(f"<b>{agent_id}:</b>\n\n{chunks[0]}", parse_mode="HTML")
+            
+            for chunk in chunks[1:]:
+                await asyncio.sleep(0.3)
+                await message.reply(chunk, parse_mode="HTML")
             
             clean_result = result.strip()
             if clean_result.startswith("@"):

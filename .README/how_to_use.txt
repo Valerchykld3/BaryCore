@@ -23,6 +23,18 @@ Moreover, on this platform you can monitor token expenditure. Tokens are not a f
 If your balance is zero, you can only use free AI models, and are limited to no more than 5 requests per minute.
 
 
+Securing the Bot (Whitelist):
+1. Add a new line to your KEYS.json:
+{
+	"telegram_token": "",
+	"gemini_api_key": "",
+	"allowed_user_id": ""
+}
+2. Find in Telegram any @userinfobot to discover your personal user id.
+3. Paste your user id inside "allowed_user_id".
+After this step, no one except you will be able to interact with the bot, even if they discover its username or token.
+
+
 Connecting cloud services:
 1. Open Google Cloud Console in your browser. 
 To work with Google cloud services, you need to activate them.
@@ -48,6 +60,7 @@ Authorizing the bot for a Telegram account:
 {
 	"telegram_token": "",
 	"gemini_api_key": "",
+	"allowed_user_id": "",
 	
 	"api_id": "",
 	"api_hash": ""
