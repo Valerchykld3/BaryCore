@@ -7,10 +7,11 @@ from core.dynamicEngine import DynamicEngine
 from core.staticEngine import StaticEngine
 
 class BaryCoreBase:
-    def __init__(self, telegram_token: str, gemini_api_key: str):
+    def __init__(self, telegram_token: str, gemini_api_key: str, allowed_user_id: int):
         self.bot = Bot(token=telegram_token)
         self.dp = Dispatcher()
         self.gemini_key = gemini_api_key
+        self.allowed_user_id = allowed_user_id
         
         self.dp.message.register(self.handle_message)
         
@@ -34,6 +35,9 @@ class BaryCoreBase:
             )
 
     async def handle_message(self, message: Message):
+        if message.chat.id != self.allowed_user_id:
+            return
+        
         print(f"Telegram forwarded the text: {message.text}")
         text = message.text
         if not text:

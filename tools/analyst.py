@@ -2,15 +2,15 @@ import json
 import os
 import re
 import threading
-from telethon.sync import TelegramClient
+import asyncio
+from telethon import TelegramClient 
 
 # Tools for DNIB
 
 CACHE_FILE = "channels_cache.json"
 telethon_lock = threading.Lock()
 
-
-def get_entity_from_cache(client: TelegramClient, channel_name: str):
+async def get_entity_from_cache(client: TelegramClient, channel_name: str):
     def normalize(text: str) -> str:
         return re.sub(r'[\s\W_]+', '', text.lower())
 
@@ -27,7 +27,8 @@ def get_entity_from_cache(client: TelegramClient, channel_name: str):
             
     print("Channel not found in cache. Updating the list of conversations...")
     cache = {}
-    for dialog in client.iter_dialogs(limit=500):
+    
+    async for dialog in client.iter_dialogs(limit=500):
         if dialog.is_channel or dialog.is_group:
             cache[dialog.name] = dialog.id
             
@@ -47,7 +48,7 @@ def get_channel_history(channel_name: str, limit: int = 20) -> str:
     try:
         with open("KEYS.json", "r", encoding="utf-8") as f:
             keys = json.load(f)
-        api_id = keys.get("api_id")
+        api_id = int(keys.get("api_id"))
         api_hash = keys.get("api_hash")
         
         if not api_id or not api_hash:
@@ -55,20 +56,22 @@ def get_channel_history(channel_name: str, limit: int = 20) -> str:
     except Exception as e:
         return f"Error reading KEYS.json: {str(e)}"
 
-    try:
-        with telethon_lock:
-            with TelegramClient('user_session', api_id, api_hash) as client:
-                target_entity = None
+    async def _fetch_history():
+        client = TelegramClient('user_session', api_id, api_hash)
+        await client.connect()
+        
+        try:
+            target_entity = None
             
             if channel_name.startswith('@') or 't.me/' in channel_name:
                 target_entity = channel_name
             else:
-                target_entity = get_entity_from_cache(client, channel_name)
+                target_entity = await get_entity_from_cache(client, channel_name)
             
             if not target_entity:
                 return f"Error: Channel '{channel_name}' not found among subscriptions. Ask the user to provide the exact @username."
 
-            messages = client.get_messages(target_entity, limit=safe_limit)
+            messages = await client.get_messages(target_entity, limit=safe_limit)
             
             if not messages:
                 return f"No messages found, or access to {channel_name} is denied."
@@ -80,6 +83,13 @@ def get_channel_history(channel_name: str, limit: int = 20) -> str:
                 result += f"[{date_str}]\n{text}\n{'='*40}\n"
             
             return result
-            
+        finally:
+            await client.disconnect() 
+
+    try:
+        with telethon_lock:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            return loop.run_until_complete(_fetch_history())
     except Exception as e:
         return f"Error retrieving channel history: {str(e)}"

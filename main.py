@@ -11,7 +11,8 @@ async def main():
 
     bary_core = BaryCoreBase(
         telegram_token=keys["telegram_token"], 
-        gemini_api_key=keys["gemini_api_key"]
+        gemini_api_key=keys["gemini_api_key"],
+        allowed_user_id=int(keys["allowed_user_id"])
     )
 
     # Executors
@@ -80,7 +81,7 @@ async def main():
         agent_purpose="You are the News Intercept Bot (DNIB). Your task is to fetch recent news and posts from user-specified "
             "Telegram channels, deeply analyze them, and provide structured, concise summaries or exact information based on user "
             "requests. Filter out ads and irrelevant noise.",
-        tools=[get_entity_from_cache, get_channel_history],
+        tools=[get_channel_history],
         model_name="gemini-3.1-pro-preview"
     )
 
