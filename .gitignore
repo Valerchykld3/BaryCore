@@ -11,3 +11,4 @@ KEYS.json
 token.json
 
 *.session
+*.session*

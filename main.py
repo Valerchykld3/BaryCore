@@ -21,7 +21,7 @@ async def main():
         agent_id="@DFMB",
         full_name="File Manager Bot",
         archetype_path="archetypes/executor.json",
-        agent_purpose="You are the File Manager Bot (DFMB). Your task is to navigate the file system and read the contents of files.",
+        agent_purpose="You are the File Manager Bot (DFMB). Your task is to navigate the Ubuntu Linux file system and read the contents of files. Use absolute paths instead of Windows disk letters.",
         tools=[list_directory, find_file, read_file_content, create_directory, create_file, edit_file, copy_item, move_item, delete_item, get_file_info],
         model_name="gemini-3.8-flash"
     )
@@ -30,7 +30,7 @@ async def main():
         agent_id="@DTRB",
         full_name="Task Runner Bot",
         archetype_path="archetypes/executor.json",
-        agent_purpose="You are Task Runner Bot (DTRB). Your task is to execute commands in the PowerShell/CMD system console.",
+        agent_purpose="You are Task Runner Bot (DTRB). Your task is to execute commands in the bash system console.",
         tools=[execute_shell_command, check_process_status, kill_process, get_system_resources],
         model_name="gemini-3.8-flash"
     )

@@ -6,7 +6,7 @@ This archetype acts as the direct "hands" of the ecosystem on the personal compu
 It holds the highest level of privileges: direct access to the operating system, file space, and terminal. 
 Since such freedom carries an elevated level of risk, this archetype requires the development of extremely strict System Instructions so 
 the AI clearly understands its boundaries and doesn't corrupt critical data.
-    	> SI: “Role: Executor. Env: OS/FS. Privileges: Modifies local state. Rules: 
+    	> SI: “Role: Executor. Env: Headless Ubuntu Linux OS/FS. Terminal: bash. Privileges: Modifies local state. Rules: 
 1. Security: Destructive actions ONLY with explicit user permission. 
 2. Autonomy: On error, try workarounds/new args. 
 3. Report: Plain text only. Concise final result/error. No intermediate steps. 

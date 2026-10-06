@@ -1,10 +1,13 @@
-Libraries required for installation (terminal commands):
-pip install aiogram
-pip install google-genai
-pip install psutil
-pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib 
-pip install telethon
-pip install send2trash
+Preparing the Ubuntu Server and Libraries (terminal commands):
+1. Update packages and install python virtual environment tool:
+   sudo apt update
+   sudo apt install python3-venv python3-pip
+2. Create and activate a virtual environment in your project folder:
+   python3 -m venv .venv
+   source .venv/bin/activate
+3. Install required libraries:
+   pip install aiogram google-genai psutil google-api-python-client google-auth-httplib2 google-auth-oauthlib telethon
+
 
 
 Connecting a Telegram bot and Google Gemini API:
@@ -15,12 +18,13 @@ Connecting a Telegram bot and Google Gemini API:
 }
 2. Open BotFather in Telegram, and then create a new bot with tap button "Create a New Bot".
 3. There you can see your bot's API key. Copy it to KEYS.json in line "telegram_token". This bot you will use for assigning tasks.
-4. Open Google AI Studio in your browser. 
+4. Open Google AI Studio in your browser on PC. 
 5. Click "Dashboard" -> "Projects" -> "Create a new project".
 6. When the project is created, click "API keys" -> "Create API key". Name it and choose the need project.
 7. Copy your API key to KEYS.json in line "gemini_api_key". 
 Moreover, on this platform you can monitor token expenditure. Tokens are not a free resource; Google charges for them. 
 If your balance is zero, you can only use free AI models, and are limited to no more than 5 requests per minute.
+
 
 
 Securing the Bot (Whitelist):
@@ -35,6 +39,7 @@ Securing the Bot (Whitelist):
 After this step, no one except you will be able to interact with the bot, even if they discover its username or token.
 
 
+
 Connecting cloud services:
 1. Open Google Cloud Console in your browser. 
 To work with Google cloud services, you need to activate them.
@@ -45,13 +50,13 @@ Now it's need to create keys.
 5. Click "APIs & Services" -> "Create credentials" -> "OAuth client ID". 
 6. Choose application type: "Desktop app", give a name, and create.
 7. A window with your new client will appear. Click "Download JSON" to save your credentials file.
-8. Rename this downloaded file to exactly "credentials.json" and place it in the root directory of your project.
+8. Rename this downloaded file to exactly "credentials.json".
 9. In the Google Cloud Console left menu, navigate to "OAuth consent screen" -> "Audience".
 10. Ensure the "Publishing status" is set to "Testing".
 11. Scroll down to the "Test users" section, click "Add Users", and type your own Google account email address. This step is critical; otherwise, Google will block the authorization attempt.
-!The first time a cloud agent (like @DGDB or @SGRB) executes a tool, a browser window will open automatically asking for authorization.
-!Log in with the Google account you added as a test user. You may see a warning stating "Google hasn't verified this app." Click "Advanced" -> "Go to [Your App Name]".
-!Grant the requested permissions for Drive and Gmail. Once authorized, a "token.json" file will be automatically created in the root folder, and the script will work autonomously without browser pop-ups in the future.
+! IMPORTANT FOR BARYCORE SKY: Your cloud Ubuntu VM does not have a web browser for Google authorization.
+! You MUST generate the "token.json" file on your LOCAL PC with BaryCore Ground model first.
+! Run the script on your local computer, log in with your Google account via the browser pop-up. Once the "token.json" file is automatically created, upload it to the root directory of your Ubuntu server via SFTP.
 
 
 
@@ -68,5 +73,17 @@ Authorizing the bot for a Telegram account:
 
 2. Open "my.telegram.org" in your browser, and create a new app.
 3. You can see your app configuration. Copy app api_id in your line "api_id". Copy app api_hash in your line "api_hash"
-4. Now locate the "auth_telethon.py" file in the project root and run it via the terminal (py auth_telethon.py).
-5. Log in. An active Telegram session will appear in the root of your project.
+! IMPORTANT FOR BARYCORE SKY: It is highly recommended to authorize Telethon locally. Run "py auth_telethon.py" on your LOCAL PC with BaryCore Ground model to easily enter your phone number and SMS code.
+! Once the "user_session.session" file is created locally, upload it to your Ubuntu server via SFTP alongside KEYS.json and token.json.
+
+
+
+Running BaryCore 24/7 on the Cloud Server:
+1. Connect to your Ubuntu VM via SSH. Navigate to the BaryCore folder.
+2. Make sure your virtual environment is active:
+   source .venv/bin/activate
+3. To start the program so it continues running even after you close the SSH terminal, use the 'nohup' command:
+   nohup python3 main.py &
+4. You can safely close your terminal window. BaryCore is now fully operational in the Sky!
+5. If you need to stop the program manually later, reconnect via SSH and run:
+   pkill -f main.py

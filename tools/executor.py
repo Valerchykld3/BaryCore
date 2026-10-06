@@ -2,7 +2,6 @@ import os
 import subprocess
 import shutil
 import psutil
-from send2trash import send2trash
 from datetime import datetime
 
 # Tools for DFMB
@@ -22,7 +21,8 @@ def find_file(target_name: str, root_path: str) -> str:
         for root, dirs, files in os.walk(root_path):
             for item in files + dirs:
                 if target_lower in item.lower():
-                    return f"Success: {os.path.join(root, item).replace('\\', '/')}"
+                    full_path = os.path.join(root, item).replace('\\', '/')
+                    return f"Success: {full_path}"
         return f"Error: '{target_name}' not found."
     except Exception as e:
         return f"Access error: {str(e)}"
@@ -110,13 +110,17 @@ def move_item(src: str, dst: str) -> str:
         return f"Move error: {str(e)}"
 
 def delete_item(path: str) -> str:
-    print(f"Attempting to trash item: {path}")
+    print(f"Attempting to permanently delete item: {path}")
     try:
         if not os.path.exists(path):
             return f"Error: '{path}' does not exist."
             
-        send2trash(path)
-        return f"Success: Moved '{path}' to the recycle bin."
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            os.remove(path)
+            
+        return f"Success: Permanently deleted '{path}'."
     except Exception as e:
         return f"Delete error: {str(e)}"
 
