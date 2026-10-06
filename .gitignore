@@ -1,11 +1,13 @@
-KEYS.json*
+.venv/
 
 __pycache__/
 
-credentials.json*
+channels_cache.json
 
-token.json*
+credentials.json
 
-user_session.session*
+KEYS.json
 
-channels_cache.json*
+token.json
+
+*.session

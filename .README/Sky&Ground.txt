@@ -1,0 +1,9 @@
+The project offers two potential operational models: a local server model and a cloud server model.
+
+BaryCore Ground is a model that runs locally on the user's PC. The agents interact with the operating system and file system of 
+the host PC, as well as the user's cloud services. This model is vulnerable to PC shutdowns, as the Python script stops running 
+when the computer is turned off.
+
+BaryCore Sky is a model that runs entirely in the cloud on a virtual machine (VM) rented by the user. 
+The agents interact with the rented VM's operating system and the user's cloud services. 
+This model is not vulnerable to shutdowns, provided the program remains running on the server 24/7.
