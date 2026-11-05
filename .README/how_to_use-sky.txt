@@ -5,8 +5,11 @@ Preparing the Ubuntu Server and Libraries (terminal commands):
 2. Create and activate a virtual environment in your project folder:
    python3 -m venv .venv
    source .venv/bin/activate
-3. Install required libraries:
-   pip install aiogram google-genai psutil google-api-python-client google-auth-httplib2 google-auth-oauthlib telethon
+3. Install project dependencies (from the repository root):
+   python -m pip install -r requirements.txt
+   Note: the pinned versions are a documented candidate set, not a snapshot of the existing VM.
+   Test in a separate environment before upgrading an active installation.
+
 
 
 
@@ -27,6 +30,7 @@ If your balance is zero, you can only use free AI models, and are limited to no 
 
 
 
+
 Securing the Bot (Whitelist):
 1. Add a new line to your KEYS.json:
 {
@@ -37,6 +41,7 @@ Securing the Bot (Whitelist):
 2. Find in Telegram any @userinfobot to discover your personal user id.
 3. Paste your user id inside "allowed_user_id".
 After this step, no one except you will be able to interact with the bot, even if they discover its username or token.
+
 
 
 
@@ -60,6 +65,7 @@ Now it's need to create keys.
 
 
 
+
 Authorizing the bot for a Telegram account:
 1. Add new lines in your KEYS.json:
 {
@@ -78,12 +84,63 @@ Authorizing the bot for a Telegram account:
 
 
 
-Running BaryCore 24/7 on the Cloud Server:
-1. Connect to your Ubuntu VM via SSH. Navigate to the BaryCore folder.
-2. Make sure your virtual environment is active:
-   source .venv/bin/activate
-3. To start the program so it continues running even after you close the SSH terminal, use the 'nohup' command:
-   nohup python3 main.py &
-4. You can safely close your terminal window. BaryCore is now fully operational in the Sky!
-5. If you need to stop the program manually later, reconnect via SSH and run:
-   pkill -f main.py
+
+Running BaryCore continuously with systemd (Ubuntu VM):
+This replaces the earlier nohup approach. The unit below is a reproducible example,
+not an export of the author's currently installed systemd unit.
+It assumes the project is cloned under /home/LINUX_USERNAME/BaryCore.
+Replace all placeholder values with your actual Linux account and project path.
+
+1. From your SSH session, verify that the project and virtual environment exist.
+   cd /home/LINUX_USERNAME/BaryCore
+   /home/LINUX_USERNAME/BaryCore/.venv/bin/python --version
+   Make sure KEYS.json, and (if needed) token.json, credentials.json, and
+   user_session.session are present.
+
+2. Create a service unit:
+   sudo nano /etc/systemd/system/barycore.service
+
+   Paste the following configuration (replace LINUX_USERNAME and paths):
+'
+   [Unit]
+Description=BaryCore Cloud Router
+After=network-online.target
+Wants=network-online.target
+
+   [Service]
+   Type=simple
+   User=LINUX_USERNAME
+   WorkingDirectory=/home/LINUX_USERNAME/BaryCore
+   ExecStart=/home/LINUX_USERNAME/BaryCore/.venv/bin/python /home/LINUX_USERNAME/BaryCore/main.py
+   Restart=always
+   RestartSec=10
+
+   [Install]
+   WantedBy=multi-user.target
+'
+
+3. Reload systemd and enable the service:
+   sudo systemctl daemon-reload
+   sudo systemctl enable --now barycore.service
+
+4. Verify status and read logs:
+   sudo systemctl status barycore.service
+   sudo journalctl -u barycore.service -f
+
+5. Control or update the service:
+   sudo systemctl restart barycore.service
+   sudo systemctl stop barycore.service
+   sudo systemctl start barycore.service
+   sudo systemctl disable --now barycore.service
+
+   After changing the unit file itself, run:
+   sudo systemctl daemon-reload
+   sudo systemctl restart barycore.service
+
+Notes:
+- systemd restarts the Python process after failures; VM auto-restart is a separate
+  feature configured at the cloud provider level.
+- Never run a nohup copy and the systemd service simultaneously: two polling
+  instances with the same Telegram bot token can conflict.
+- Google OAuth credentials in Testing mode may require reauthorization; a
+  headless server cannot complete an interactive local-browser OAuth flow.

@@ -140,12 +140,15 @@ def get_file_info(path: str) -> str:
 def execute_shell_command(command: str) -> str:
     print(f"Executing command: {command}")
     try:
-        result = subprocess.run(command, shell=True, capture_output=True, text=True, encoding='utf-8')
+        result = subprocess.run(command, shell=True, capture_output=True, text=True, encoding='utf-8', timeout=120)
         if result.stdout:
             return f"Success (stdout):\n{result.stdout[:1000]}"
         if result.stderr:
             return f"Execution error (stderr):\n{result.stderr[:1000]}"
         return "Command executed successfully (no output)."
+
+    except subprocess.TimeoutExpired:
+        return "Execution error: Command exceeded the 120-second timeout."
 
     except Exception as e:
         return f"Critical terminal error: {str(e)}"
