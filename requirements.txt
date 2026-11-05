@@ -1,0 +1,11 @@
+# BaryCore Sky — direct runtime dependencies.
+# Candidate versions verified from public package indexes in November 2026.
+# These are NOT a snapshot of the packages installed on the author's VM.
+# Test in an isolated virtual environment before changing a live service.
+aiogram==3.31.0
+google-genai==2.34.0
+psutil==7.2.2
+google-api-python-client==2.201.0
+google-auth-httplib2==0.4.0
+google-auth-oauthlib==1.4.0
+telethon==1.44.0
